@@ -1,0 +1,157 @@
+@baseUrl=https://example.com
+@username=admin
+@password=admin123
+@token=<token>
+
+@remote_artifactory_username="user"
+@remote_artifactory_password="pass"
+
+@num_invalid_login_attempts=1
+
+## Oauth variables
+
+@oauthApiUrl=https://keycloak.example.com/realms/artifactory/protocol/openid-connect/userinfo
+@oauthAuthUrl=https://keycloak.example.com/realms/artifactory/protocol/openid-connect/auth
+@oauthTokenUrl=https://keycloak.example.com/realms/artifactory/protocol/openid-connect/token
+@oauthSecret=""
+@oauthClientId=artifactory
+
+
+### Get system info [Token or Basic username:password]
+GET {{baseUrl}}/artifactory/api/system
+Content-Type: application/json
+# Authorization: Bearer {{token}}
+Authorization: Basic {{username}}:{{password}}
+
+
+### Get baseurl [Token | Basic username:password | NoAuth]
+GET {{baseUrl}}
+Content-Type: application/json
+# Authorization: Bearer {{token}}
+# Authorization: Basic {{username}}:{{password}}
+
+
+### Get all tokens [Token only]
+GET {{baseUrl}}/access/api/v1/tokens
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+
+### Get livenessprobe [Token | NoAuth]
+GET {{baseUrl}}/access/api/v1/system/liveness
+Content-Type: application/json
+# Authorization: Bearer {{token}}
+
+
+### Get readiness [Token | NoAuth]
+GET {{baseUrl}}/access/api/v1/system/readiness
+Content-Type: application/json
+# Authorization: Bearer {{token}}
+
+
+### Check connection to Remote Artifactory [Token | Basic username:password]
+POST {{baseUrl}}/artifactory/api/system/verifyconnection
+Content-Type: application/json
+Authorization: Bearer {{token}}
+# Authorization: Basic {{username}}:{{password}}
+
+{
+  "endpoint" : "https://some.remote.artifactory.example.com/artifactory/some-repo/",
+  "username" : {{remote_artifactory_username}},
+  "password" : {{remote_artifactory_password}}
+}
+
+
+### Get system configuration [Token | Basic username:password]
+GET {{baseUrl}}/artifactory/api/system/configuration
+Content-Type: application/json
+Authorization: Bearer {{token}}
+# Authorization: Basic {{username}}:{{password}}
+
+### Update (patch) system configuration with keycloak
+PATCH {{baseUrl}}/artifactory/api/system/configuration
+Content-Type: application/yaml
+# Authorization: Bearer {{token}}
+# Authorization: Basic {{username}}:{{password}}
+
+security: 
+  oauthSettings: 
+    enableIntegration: true
+    persistUsers: true
+    allowUserToAccessProfile: false
+    oauthProvidersSettings:
+      artifactory-test:
+        enabled: true
+        apiUrl: {{oauthApiUrl}}
+        authUrl: {{oauthAuthUrl}}
+        tokenUrl: {{oauthTokenUrl}}
+        providerType: openId
+        secret: {{oauthSecret}} 
+        id: {{oauthClientId}}
+
+
+### Get license information [Token | Basic username:password]
+GET {{baseUrl}}/artifactory/api/system/license
+Content-Type: application/json
+Authorization: Bearer {{token}}
+# Authorization: Basic {{username}}:{{password}}
+
+
+### Disable backup [Token or Basic username:password]
+PATCH {{baseUrl}}/artifactory/api/system/configuration
+Content-Type: application/yaml
+Authorization: Bearer {{token}}
+# Authorization: Basic {{username}}:{{password}}
+
+backups:
+  backup-daily:
+    enabled: false
+  backup-weekly:
+    enabled: false
+
+
+### Get all locked users
+GET {{baseUrl}}/artifactory/api/security/lockedUsers
+# PATCH {{baseUrl}}/artifactory/api/system/configuration
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+
+### Unlock all users
+POST {{baseUrl}}/artifactory/api/security/unlockAllUsers
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+
+### Revoke all API keys
+DELETE {{baseUrl}}/artifactory/api/security/apiKey?deleteAll={0/1}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+DELETE {{baseUrl}}/artifactory/api/security/apiKey?deleteAll={0/1}
+
+### Retrieve User Lock Policy
+GET {{baseUrl}}/artifactory/api/security/userLockPolicy
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+
+### Configure User Lock Policy to lock fast
+PUT {{baseUrl}}/artifactory/api/security/userLockPolicy
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{ 
+   "enabled" : true, 
+   "loginAttempts" : {{num_invalid_login_attempts}}
+}
+
+### Disable User Lock Policy
+PUT {{baseUrl}}/artifactory/api/security/userLockPolicy
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{ 
+   "enabled" : false, 
+   "loginAttempts" : 0 
+}
